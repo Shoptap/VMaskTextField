@@ -5,6 +5,7 @@
 @property (nonatomic,strong) NSString * mask;
 @property (nonatomic,strong) NSString * raw;
 @property (nonatomic,strong) NSString * defaultCharMask;
+@property (nonatomic,assign) NSInteger lastMaskLocation;
 
 -(double) rawToDouble;
 -(float) rawToFloat;
