@@ -3,8 +3,10 @@
 @interface VMaskTextField : UITextField
 
 @property (nonatomic,strong) NSString * mask;
+@property (nonatomic,strong) NSString * placeholderMask;
 @property (nonatomic,strong) NSString * raw;
 @property (nonatomic,strong) NSString * defaultCharMask;
+@property (nonatomic,assign) NSInteger lastMaskLocation;
 
 -(double) rawToDouble;
 -(float) rawToFloat;
@@ -12,5 +14,8 @@
 -(NSDate *)rawToDate:(NSDateFormatter *)formatter;
 
 - (BOOL)shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string;
+-(void) setTextWithMask:(NSString *) text;
+
+- (void)setSelectedRange:(NSRange)range;
 
 @end
