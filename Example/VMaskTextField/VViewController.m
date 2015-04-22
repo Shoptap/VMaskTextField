@@ -7,6 +7,8 @@
     self.maskTextFieldDateAndHour.mask = @"##/##/#### ##:##:##";
     self.maskTextFieldDate.mask = @"##/##/####";
     self.maskTextFieldHour.mask = @"##:##:##";
+
+    self.maskTextFieldDate.placeholderMask = @"MM/DD/YYYY";
     //[self.maskTextFieldDate setTextWithMask:@"12122012"];
     //[self.maskTextFieldTelephone setTextWithMask:@"1111111111111111111"];
 }

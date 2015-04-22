@@ -32,16 +32,21 @@ NSString * kVMaskTextFieldDefaultChar = @"#";
     }
 }
 
-- (void)setMask:(NSString *)mask {
-    _mask = mask;
-    self.text = mask;
+- (void)setPlaceholderMask:(NSString *)placeholderMask {
+    if (placeholderMask.length == _mask.length) {
+        _placeholderMask = placeholderMask;
+        self.text = placeholderMask;
+    }
 }
 
 - (BOOL)shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string {
-    // User deleted something
     NSString * currentTextDigited = [self.text stringByReplacingCharactersInRange:range withString:string];
-    currentTextDigited = [currentTextDigited stringByReplacingCharactersInRange:NSMakeRange(currentTextDigited.length - _mask.length + self.lastMaskLocation, _mask.length - self.lastMaskLocation) withString:@""];
 
+    if (self.placeholderMask.length) {
+        currentTextDigited = [currentTextDigited stringByReplacingCharactersInRange:NSMakeRange(currentTextDigited.length - self.placeholderMask.length + self.lastMaskLocation, self.placeholderMask.length - self.lastMaskLocation) withString:@""];
+    }
+
+    // User deleted something
     if (string.length == 0) {
         while (currentTextDigited.length > 0 && !isnumber([currentTextDigited characterAtIndex:currentTextDigited.length-1])) {
             currentTextDigited = [currentTextDigited substringToIndex:[currentTextDigited length] - 1];
@@ -50,11 +55,14 @@ NSString * kVMaskTextFieldDefaultChar = @"#";
         // Save the place we stopped so we can cut it off when we come back here
         self.lastMaskLocation = currentTextDigited.length;
 
-        // Tack the rest of the mask on the end
-        self.text = [currentTextDigited stringByAppendingString:[_mask substringWithRange:NSMakeRange(self.lastMaskLocation, _mask.length - self.lastMaskLocation)]];
+        if (self.placeholderMask.length) {
+            // Tack the rest of the mask on the end
+            self.text = [currentTextDigited stringByAppendingString:[self.placeholderMask substringWithRange:NSMakeRange(self.lastMaskLocation, self.placeholderMask.length - self.lastMaskLocation)]];
 
-        UITextPosition *start = [self positionFromPosition:[self beginningOfDocument] offset:self.lastMaskLocation];
-        [self setSelectedTextRange:[self textRangeFromPosition:start toPosition:[self positionFromPosition:start offset:0]]];
+            [self setSelectedRange:NSMakeRange(self.lastMaskLocation, 0)];
+        } else {
+            self.text = currentTextDigited;
+        }
 
         return NO;
     }
@@ -101,15 +109,18 @@ NSString * kVMaskTextFieldDefaultChar = @"#";
         [returnText appendString:string];
     }
 
-    // Tack the rest of the mask on the end
-    [returnText appendString:[_mask substringWithRange:NSMakeRange(loc, _mask.length - loc)]];
-
     // Save the place we stopped so we can cut it off when we come back here
     self.lastMaskLocation = loc;
 
-    self.text = returnText;
-    UITextPosition *start = [self positionFromPosition:[self beginningOfDocument] offset:loc];
-    [self setSelectedTextRange:[self textRangeFromPosition:start toPosition:[self positionFromPosition:start offset:0]]];
+    if (self.placeholderMask.length) {
+        // Tack the rest of the mask on the end
+        [returnText appendString:[self.placeholderMask substringWithRange:NSMakeRange(loc, self.placeholderMask.length - loc)]];
+
+        self.text = returnText;
+        [self setSelectedRange:NSMakeRange(loc, 0)];
+    } else {
+        self.text = returnText;
+    }
 
     return NO;
 }
@@ -129,6 +140,28 @@ NSString * kVMaskTextFieldDefaultChar = @"#";
 -(NSDate *)rawToDate:(NSDateFormatter *)formatter{
     NSDate *date = [formatter dateFromString:_raw];
     return date;
+}
+
+- (BOOL)selectedRangeAcceptable:(UITextRange *)range {
+    NSInteger pos = [self offsetFromPosition:[self beginningOfDocument] toPosition:range.start];
+    return pos <= self.lastMaskLocation;
+}
+
+- (NSRange)endOfEnteredText {
+    return NSMakeRange(self.lastMaskLocation, 0);
+}
+
+- (void)setSelectedRange:(NSRange)range {
+    UITextPosition *start = [self positionFromPosition:[self beginningOfDocument] offset:range.location];
+    [self setSelectedTextRange:[self textRangeFromPosition:start toPosition:[self positionFromPosition:start offset:range.length]]];
+}
+
+- (void)setSelectedTextRange:(UITextRange *)selectedTextRange {
+    if (![self selectedRangeAcceptable:selectedTextRange]) {
+        [self setSelectedRange:[self endOfEnteredText]];
+    } else {
+        [super setSelectedTextRange:selectedTextRange];
+    }
 }
 
 @end
