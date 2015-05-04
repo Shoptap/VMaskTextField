@@ -32,10 +32,16 @@ NSString * kVMaskTextFieldDefaultChar = @"#";
     }
 }
 
+- (void)setText:(NSString *)text {
+    NSMutableAttributedString *attrText = [[NSMutableAttributedString alloc] initWithString:[text copy]];
+    [attrText addAttribute:NSForegroundColorAttributeName value:self.placeholderColor range:NSMakeRange(self.lastMaskLocation, self.placeholderMask.length - self.lastMaskLocation)];
+    [self setAttributedText:attrText];
+}
+
 - (void)setPlaceholderMask:(NSString *)placeholderMask {
     if (placeholderMask.length == _mask.length) {
         _placeholderMask = placeholderMask;
-        self.text = placeholderMask;
+        self.attributedText = [[NSAttributedString alloc] initWithString:placeholderMask attributes:@{NSForegroundColorAttributeName: self.placeholderColor}];
     }
 }
 
@@ -152,13 +158,17 @@ NSString * kVMaskTextFieldDefaultChar = @"#";
 }
 
 - (void)setSelectedRange:(NSRange)range {
+    [self setSelectedTextRange:[self textRangeFromNSRange:range]];
+}
+
+- (UITextRange *)textRangeFromNSRange:(NSRange)range {
     UITextPosition *start = [self positionFromPosition:[self beginningOfDocument] offset:range.location];
-    [self setSelectedTextRange:[self textRangeFromPosition:start toPosition:[self positionFromPosition:start offset:range.length]]];
+    return [self textRangeFromPosition:start toPosition:[self positionFromPosition:start offset:range.length]];
 }
 
 - (void)setSelectedTextRange:(UITextRange *)selectedTextRange {
     if (![self selectedRangeAcceptable:selectedTextRange]) {
-        [self setSelectedRange:[self endOfEnteredText]];
+        [super setSelectedTextRange:[self textRangeFromNSRange:[self endOfEnteredText]]];
     } else {
         [super setSelectedTextRange:selectedTextRange];
     }
