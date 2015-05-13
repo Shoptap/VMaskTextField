@@ -2,6 +2,12 @@
 
 NSString * kVMaskTextFieldDefaultChar = @"#";
 
+@interface VMaskTextField()
+
+@property (strong, nonatomic) UIColor *defaultTextColor;
+
+@end
+
 @implementation VMaskTextField
 
 - (instancetype)initWithCoder:(NSCoder *)coder
@@ -9,6 +15,7 @@ NSString * kVMaskTextFieldDefaultChar = @"#";
     self = [super initWithCoder:coder];
     if (self) {
         self.defaultCharMask = kVMaskTextFieldDefaultChar;
+        self.defaultTextColor = self.textColor;
     }
     return self;
 }
@@ -18,6 +25,7 @@ NSString * kVMaskTextFieldDefaultChar = @"#";
     self = [super initWithFrame:frame];
     if (self) {
         self.defaultCharMask = kVMaskTextFieldDefaultChar;
+        self.defaultTextColor = self.textColor;
     }
     return self;
 }
@@ -33,16 +41,31 @@ NSString * kVMaskTextFieldDefaultChar = @"#";
 }
 
 - (void)setText:(NSString *)text {
-    NSMutableAttributedString *attrText = [[NSMutableAttributedString alloc] initWithString:[text copy]];
-    [attrText addAttribute:NSForegroundColorAttributeName value:self.placeholderColor range:NSMakeRange(self.lastMaskLocation, self.placeholderMask.length - self.lastMaskLocation)];
-    [self setAttributedText:attrText];
+    if (self.placeholderMask) {
+        NSMutableAttributedString *attrText = [[NSMutableAttributedString alloc] initWithString:[text copy]];
+        [attrText addAttribute:NSForegroundColorAttributeName value:self.defaultTextColor range:NSMakeRange(0, self.lastMaskLocation)];
+        [attrText addAttribute:NSForegroundColorAttributeName value:(self.placeholderColor ?: self.defaultTextColor) range:NSMakeRange(self.lastMaskLocation, self.placeholderMask.length - self.lastMaskLocation)];
+        [self setAttributedText:attrText];
+    } else {
+        [super setText:text];
+    }
 }
 
 - (void)setPlaceholderMask:(NSString *)placeholderMask {
     if (placeholderMask.length == _mask.length) {
         _placeholderMask = placeholderMask;
-        self.attributedText = [[NSAttributedString alloc] initWithString:placeholderMask attributes:@{NSForegroundColorAttributeName: self.placeholderColor}];
+        self.attributedText = [[NSAttributedString alloc] initWithString:placeholderMask attributes:@{NSForegroundColorAttributeName: self.placeholderColor ?: self.defaultTextColor}];
     }
+}
+
+- (void)setTextColor:(UIColor *)textColor {
+    [super setTextColor:textColor];
+    self.defaultTextColor = textColor;
+}
+
+- (void)setPlaceholderColor:(UIColor *)placeholderColor {
+    self.defaultTextColor = self.textColor;
+    _placeholderColor = placeholderColor;
 }
 
 - (BOOL)shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string {
