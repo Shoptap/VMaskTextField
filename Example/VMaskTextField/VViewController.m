@@ -8,6 +8,7 @@
     self.maskTextFieldDate.mask = @"##/##/####";
     self.maskTextFieldHour.mask = @"##:##:##";
 
+    self.maskTextFieldDate.placeholderColor = [UIColor grayColor];
     self.maskTextFieldDate.placeholderMask = @"MM/DD/YYYY";
     //[self.maskTextFieldDate setTextWithMask:@"12122012"];
     //[self.maskTextFieldTelephone setTextWithMask:@"1111111111111111111"];
